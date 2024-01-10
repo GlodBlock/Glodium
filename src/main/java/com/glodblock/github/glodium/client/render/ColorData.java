@@ -10,8 +10,8 @@ public class ColorData {
     public ColorData(float a, float r, float g, float b) {
         this.a = a;
         this.r = r;
-        this.g = b;
-        this.b = g;
+        this.g = g;
+        this.b = b;
     }
 
     public ColorData(float r, float g, float b) {
