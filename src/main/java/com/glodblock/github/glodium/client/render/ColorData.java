@@ -27,7 +27,7 @@ public class ColorData {
     }
 
     public ColorData(int argb) {
-        this((argb >> 24) & 0xFF, (argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF);
+        this((argb >>> 24) & 0xFF, (argb >>> 16) & 0xFF, (argb >>> 8) & 0xFF, argb & 0xFF);
     }
 
     public float getAf() {
