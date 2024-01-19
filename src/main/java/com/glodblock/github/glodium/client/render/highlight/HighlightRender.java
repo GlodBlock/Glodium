@@ -1,7 +1,6 @@
 package com.glodblock.github.glodium.client.render.highlight;
 
 import com.glodblock.github.glodium.client.render.ColorData;
-import com.glodblock.github.glodium.reflect.ClientReflect;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -20,15 +19,28 @@ import java.util.OptionalDouble;
 public class HighlightRender extends RenderType {
 
     public static final HighlightRender INSTANCE = new HighlightRender();
-    private RenderType BLOCK_HIGHLIGHT_LINE;
+    private final LineStateShard LINE_3 = new LineStateShard(OptionalDouble.of(3.0));
+    private final RenderType BLOCK_HIGHLIGHT_LINE = create("glodium_block_highlight_line",
+            DefaultVertexFormat.POSITION_COLOR_NORMAL, VertexFormat.Mode.LINES, 65536, false, false,
+            CompositeState.builder()
+                    .setLineState(LINE_3)
+                    .setTransparencyState(TransparencyStateShard.GLINT_TRANSPARENCY)
+                    .setTextureState(NO_TEXTURE)
+                    .setDepthTestState(NO_DEPTH_TEST)
+                    .setCullState(NO_CULL)
+                    .setLightmapState(NO_LIGHTMAP)
+                    .setWriteMaskState(COLOR_DEPTH_WRITE)
+                    .setShaderState(RENDERTYPE_LINES_SHADER)
+                    .createCompositeState(false)
+    );
 
     public static void hook(RenderLevelStageEvent event) {
         if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
-            HighlightRender.INSTANCE.tick(event.getPoseStack(), ClientReflect.getRenderBuffers(event.getLevelRenderer()).outlineBufferSource(), event.getCamera());
+            HighlightRender.INSTANCE.tick(event.getPoseStack(), Minecraft.getInstance().renderBuffers().bufferSource(), event.getCamera());
         }
     }
 
-    public void tick(PoseStack stack, MultiBufferSource multiBuf, Camera camera) {
+    public void tick(PoseStack stack, MultiBufferSource.BufferSource multiBuf, Camera camera) {
         var world = Minecraft.getInstance().level;
         if (world == null) {
             return;
@@ -43,6 +55,7 @@ public class HighlightRender extends RenderType {
                 drawBlockOutline(block.box(), block.color(), stack, camera, multiBuf);
             }
         }
+        multiBuf.endBatch();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
     }
@@ -74,7 +87,7 @@ public class HighlightRender extends RenderType {
             var bottomRight2 = new Vec3(aabb.maxX, aabb.minY, aabb.minZ);
             var bottomLeft2 = new Vec3(aabb.minX, aabb.minY, aabb.minZ);
             var topLeft2 = new Vec3(aabb.minX, aabb.maxY, aabb.minZ);
-            var buf = multiBuf.getBuffer(this.getBlockHighlightLine());
+            var buf = multiBuf.getBuffer(BLOCK_HIGHLIGHT_LINE);
             renderBox(buf, stack, topLeft, bottomLeft, topRight, bottomRight, r, g, b, a);
             renderBox(buf, stack, topLeft2, bottomLeft2, topRight2, bottomRight2, r, g, b, a);
             renderLine(buf, stack, topRight, topRight2, r, g, b, a);
@@ -96,25 +109,6 @@ public class HighlightRender extends RenderType {
         var normal = from.subtract(to);
         buf.vertex(mat, (float) from.x, (float) from.y, (float) from.z).color(r, g, b, a).normal((float) normal.x, (float) normal.y, (float) normal.z).endVertex();
         buf.vertex(mat, (float) to.x, (float) to.y, (float) to.z).color(r, g, b, a).normal((float) normal.x, (float) normal.y, (float) normal.z).endVertex();
-    }
-
-    private static final LineStateShard LINE_3 = new LineStateShard(OptionalDouble.of(3.0));
-
-    public RenderType getBlockHighlightLine() {
-        if (BLOCK_HIGHLIGHT_LINE == null) {
-            BLOCK_HIGHLIGHT_LINE = create("block_hilight_line",
-                    DefaultVertexFormat.POSITION_COLOR_NORMAL, VertexFormat.Mode.LINES, 65536, false, false,
-                    CompositeState.builder().setLineState(LINE_3)
-                            .setTransparencyState(TransparencyStateShard.GLINT_TRANSPARENCY)
-                            .setTextureState(NO_TEXTURE)
-                            .setDepthTestState(NO_DEPTH_TEST)
-                            .setCullState(NO_CULL)
-                            .setLightmapState(NO_LIGHTMAP)
-                            .setWriteMaskState(COLOR_DEPTH_WRITE)
-                            .setShaderState(RENDERTYPE_LINES_SHADER)
-                            .createCompositeState(false));
-        }
-        return BLOCK_HIGHLIGHT_LINE;
     }
 
     private HighlightRender() {
