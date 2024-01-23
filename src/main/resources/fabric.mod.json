@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"id": "glodium",
+	"version": "${version}",
+	"name": "Glodium",
+	"description": "Codelib",
+	"authors": [
+		"GlodBlock"
+	],
+	"contact": {
+		"sources": "https://github.com/GlodBlock/Glodium"
+	},
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.glodblock.github.glodium.GlodiumServer"
+		],
+		"client": [
+			"com.glodblock.github.glodium.GlodiumClient"
+		]
+	},
+	"mixins": [],
+	"depends": {
+		"fabricloader": ">=0.14.21",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
