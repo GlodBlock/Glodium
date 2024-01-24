@@ -44,7 +44,7 @@ public class RegistryHandler {
         tiles.add(Pair.of(name, type));
     }
 
-    public final void runRegister() {
+    public void runRegister() {
         onRegisterBlocks();
         onRegisterItems();
         onRegisterTileEntities();
