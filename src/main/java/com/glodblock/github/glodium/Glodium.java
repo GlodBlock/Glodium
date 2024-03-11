@@ -1,6 +1,7 @@
 package com.glodblock.github.glodium;
 
 import com.glodblock.github.glodium.client.render.highlight.HighlightRender;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
@@ -23,6 +24,10 @@ public class Glodium {
 
     public MinecraftServer getServer() {
         return ServerLifecycleHooks.getCurrentServer();
+    }
+
+    public static ResourceLocation id(String modid, String name) {
+        return new ResourceLocation(modid, name);
     }
 
 }

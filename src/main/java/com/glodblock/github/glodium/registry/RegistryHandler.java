@@ -1,7 +1,10 @@
 package com.glodblock.github.glodium.registry;
 
+import com.glodblock.github.glodium.Glodium;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -23,15 +26,9 @@ public class RegistryHandler {
     protected final List<Pair<String, Item>> items = new ArrayList<>();
     protected final List<Pair<String, BlockEntityType<?>>> tiles = new ArrayList<>();
     protected final Object2ReferenceMap<String, Function<Block, Item>> itemBlocks = new Object2ReferenceOpenHashMap<>();
-    protected final DeferredRegister<Block> BLOCK;
-    protected final DeferredRegister<Item> ITEM;
-    protected final DeferredRegister<BlockEntityType<?>> TILE_TYPE;
 
     public RegistryHandler(String modid) {
         this.id = modid;
-        this.BLOCK = DeferredRegister.create(Registries.BLOCK, modid);
-        this.ITEM = DeferredRegister.create(Registries.ITEM, modid);
-        this.TILE_TYPE = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, modid);
     }
 
     public void block(String name, Block block) {
@@ -51,42 +48,29 @@ public class RegistryHandler {
         this.tiles.add(Pair.of(name, type));
     }
 
-    public final void runRegister(IEventBus bus) {
-        doRegister();
-        collectHolder(bus);
-    }
-
-    @MustBeInvokedByOverriders
-    public void collectHolder(IEventBus bus) {
-        this.BLOCK.register(bus);
-        this.ITEM.register(bus);
-        this.TILE_TYPE.register(bus);
-    }
-
-    @MustBeInvokedByOverriders
-    public void doRegister() {
+    public void runRegister() {
         onRegisterBlocks();
         onRegisterItems();
         onRegisterTileEntities();
     }
 
     protected void onRegisterBlocks() {
-        this.blocks.forEach(e -> this.BLOCK.register(e.getLeft(), e::getRight));
+        this.blocks.forEach(e -> Registry.register(BuiltInRegistries.BLOCK, Glodium.id(this.id, e.getLeft()), e.getRight()));
     }
 
     protected void onRegisterItems() {
-        for (Pair<String, Block> entry : blocks) {
-            if (this.itemBlocks.containsKey(entry.getLeft())) {
-                this.ITEM.register(entry.getLeft(), () -> this.itemBlocks.get(entry.getLeft()).apply(entry.getRight()));
+        for (Pair<String, Block> e : blocks) {
+            if (this.itemBlocks.containsKey(e.getLeft())) {
+                Registry.register(BuiltInRegistries.ITEM, Glodium.id(this.id, e.getLeft()), this.itemBlocks.get(e.getLeft()).apply(e.getRight()));
             } else {
-                this.ITEM.register(entry.getLeft(), () -> new BlockItem(entry.getRight(), new Item.Properties()));
+                Registry.register(BuiltInRegistries.ITEM, Glodium.id(this.id, e.getLeft()), new BlockItem(e.getRight(), new Item.Properties()));
             }
         }
-        this.items.forEach(e -> this.ITEM.register(e.getLeft(), e::getRight));
+        this.items.forEach(e -> Registry.register(BuiltInRegistries.ITEM, Glodium.id(this.id, e.getLeft()), e.getRight()));
     }
 
     protected void onRegisterTileEntities() {
-        this.tiles.forEach(e -> this.TILE_TYPE.register(e.getLeft(), e::getRight));
+        this.tiles.forEach(e -> Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Glodium.id(this.id, e.getLeft()), e.getRight()));
     }
 
 }
