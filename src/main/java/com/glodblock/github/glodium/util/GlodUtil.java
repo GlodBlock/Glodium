@@ -6,6 +6,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.util.thread.SidedThreadGroups;
 import net.minecraftforge.registries.IForgeRegistry;
 
 public class GlodUtil {
@@ -41,6 +43,13 @@ public class GlodUtil {
 
     public static double clamp(double num, double floor, double ceil) {
         return Math.min(ceil, Math.max(floor, num));
+    }
+
+    public static Dist side() {
+        if (Thread.currentThread().getThreadGroup() == SidedThreadGroups.SERVER) {
+            return Dist.DEDICATED_SERVER;
+        }
+        return Dist.CLIENT;
     }
 
 }

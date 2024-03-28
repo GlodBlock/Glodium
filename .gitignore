@@ -22,6 +22,7 @@ eclipse
 run/
 run-data/
 src/generated
+logs/
 
 # Files from Forge MDK
 forge*changelog.txt

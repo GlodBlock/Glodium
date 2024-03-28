@@ -1,8 +1,12 @@
 package com.glodblock.github.glodium.reflect;
 
+import com.glodblock.github.glodium.reflect.moon.Moon;
+
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
 public class ReflectKit {
@@ -28,7 +32,7 @@ public class ReflectKit {
     }
 
     @SuppressWarnings("all")
-    public static Field reflectField(Class<?> owner, String ...names) throws NoSuchFieldException {
+    public static Field reflectField(Class<?> owner, String... names) throws NoSuchFieldException, IllegalAccessException {
         Field f = null;
         for (String name : names) {
             try {
@@ -40,7 +44,14 @@ public class ReflectKit {
         }
         if (f == null) throw new NoSuchFieldException("Can't find field from " + Arrays.toString(names));
         f.setAccessible(true);
+        removeFinal(f);
         return f;
+    }
+
+    public static <T> Constructor<T> reflectCon(Class<T> owner, Class<?>... paramTypes) throws NoSuchMethodException {
+        var c = owner.getDeclaredConstructor(paramTypes);
+        c.setAccessible(true);
+        return c;
     }
 
     @SuppressWarnings("unchecked")
@@ -60,7 +71,7 @@ public class ReflectKit {
         }
     }
 
-    public static void executeMethod(Object owner, Method method, Object ... args) {
+    public static void executeMethod(Object owner, Method method, Object... args) {
         try {
             method.invoke(owner, args);
         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -69,11 +80,30 @@ public class ReflectKit {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T executeMethod2(Object owner, Method method, Object ... args) {
+    public static <T> T executeMethod2(Object owner, Method method, Object... args) {
         try {
             return (T) method.invoke(owner, args);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new IllegalStateException("Failed to execute method: " + method);
+        }
+    }
+
+    public static <T> T construct(Constructor<T> con, Object... args) {
+        try {
+            return con.newInstance(args);
+        } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            throw new IllegalStateException("Failed to create new instance: " + con);
+        }
+    }
+
+    private static void removeFinal(Field field) {
+        var modify = field.getModifiers();
+        // remove primitive type's final modifier is meaningless
+        if (field.getType().isPrimitive() && Modifier.isFinal(modify)) {
+            return;
+        }
+        if (Modifier.isStatic(modify) && Modifier.isFinal(modify)) {
+            Moon.MOON.removeFinal(field);
         }
     }
 
