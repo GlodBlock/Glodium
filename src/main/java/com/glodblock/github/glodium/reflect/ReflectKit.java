@@ -44,7 +44,6 @@ public class ReflectKit {
         }
         if (f == null) throw new NoSuchFieldException("Can't find field from " + Arrays.toString(names));
         f.setAccessible(true);
-        removeFinal(f);
         return f;
     }
 
@@ -57,7 +56,7 @@ public class ReflectKit {
     @SuppressWarnings("unchecked")
     public static <T> T readField(Object owner, Field field) {
         try {
-            return (T) Moon.getField(field, owner);
+            return (T) field.get(owner);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to read field: " + field);
         }
@@ -65,7 +64,7 @@ public class ReflectKit {
 
     public static void writeField(Object owner, Field field, Object value) {
         try {
-            Moon.setField(field, owner, value);
+            field.set(owner, value);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to write field: " + field);
         }
