@@ -43,7 +43,7 @@ public class AutoReflects {
                             var field = new ConObj(ReflectKit.reflectCon(host, property.paras()));
                             ReflectKit.writeField(obj, rf, field);
                         }
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         if (!silent) {
                             logger.error("Fail to init reflection in {}. Properties[host={}, path={}, names={}, paras={}, side={}]",
                                     clazz.getName(), property.host(), property.path(), property.name(), property.paras(), property.side());
