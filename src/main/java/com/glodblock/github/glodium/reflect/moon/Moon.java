@@ -17,9 +17,9 @@ public final class Moon {
 
     private static Unsafe unsafe() {
         try {
-            Field theUNSAFE = Unsafe.class.getDeclaredField("theUnsafe");
-            theUNSAFE.setAccessible(true);
-            return (Unsafe) theUNSAFE.get(null);
+            Field theSafe = Unsafe.class.getDeclaredField("theUnsafe");
+            theSafe.setAccessible(true);
+            return (Unsafe) theSafe.get(null);
         } catch (IllegalAccessException | NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
