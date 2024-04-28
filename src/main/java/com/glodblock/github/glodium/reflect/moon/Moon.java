@@ -8,7 +8,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
-@SuppressWarnings("deprecation")
 @ApiStatus.Internal
 public final class Moon {
 
@@ -45,18 +44,20 @@ public final class Moon {
         }
     }
 
+    @SuppressWarnings("removal")
     public static void setField(Field field, Object owner, Object value) throws IllegalAccessException {
         if (Modifier.isStatic(field.getModifiers())) {
-            LOOKUP.ensureInitialized(field.getDeclaringClass());
+            UNSAFE.ensureClassInitialized(field.getDeclaringClass());
             putHelper(field.getType(), UNSAFE.staticFieldBase(field), UNSAFE.staticFieldOffset(field), value);
         } else {
             putHelper(field.getType(), owner, UNSAFE.objectFieldOffset(field), value);
         }
     }
 
+    @SuppressWarnings("removal")
     public static Object getField(Field field, Object owner) throws IllegalAccessException {
         if (Modifier.isStatic(field.getModifiers())) {
-            LOOKUP.ensureInitialized(field.getDeclaringClass());
+            UNSAFE.ensureClassInitialized(field.getDeclaringClass());
             return getHelper(field.getType(), UNSAFE.staticFieldBase(field), UNSAFE.staticFieldOffset(field));
         } else {
             return getHelper(field.getType(), owner, UNSAFE.objectFieldOffset(field));
