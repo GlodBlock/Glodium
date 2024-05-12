@@ -7,7 +7,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
 import net.neoforged.neoforge.network.handling.IPlayPayloadHandler;
@@ -26,7 +25,6 @@ public class NetworkHandler {
         this.modid = modid;
     }
 
-    @SubscribeEvent
     public void onRegister(RegisterPayloadHandlerEvent event) {
         this.registrar = event.registrar(this.modid);
         this.initPackets();

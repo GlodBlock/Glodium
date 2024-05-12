@@ -1,8 +1,11 @@
 package com.glodblock.github.glodium.reflect;
 
+import com.glodblock.github.glodium.reflect.moon.Moon;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
 public class ReflectKit {
@@ -39,6 +42,7 @@ public class ReflectKit {
             }
         }
         if (f == null) throw new NoSuchFieldException("Can't find field from " + Arrays.toString(names));
+        removeFinal(f);
         f.setAccessible(true);
         return f;
     }
@@ -46,7 +50,7 @@ public class ReflectKit {
     @SuppressWarnings("unchecked")
     public static <T> T readField(Object owner, Field field) {
         try {
-            return (T)field.get(owner);
+            return (T) Moon.getField(field, owner);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to read field: " + field);
         }
@@ -54,7 +58,7 @@ public class ReflectKit {
 
     public static void writeField(Object owner, Field field, Object value) {
         try {
-            field.set(owner, value);
+            Moon.setField(field, owner, value);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to write field: " + field);
         }
@@ -74,6 +78,17 @@ public class ReflectKit {
             return (T) method.invoke(owner, args);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new IllegalStateException("Failed to execute method: " + method);
+        }
+    }
+
+    private static void removeFinal(Field field) {
+        var modify = field.getModifiers();
+        // remove primitive type's final modifier is meaningless
+        if (field.getType().isPrimitive() && Modifier.isFinal(modify)) {
+            return;
+        }
+        if (Modifier.isStatic(modify) && Modifier.isFinal(modify)) {
+            Moon.removeFinal(field);
         }
     }
 

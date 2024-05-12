@@ -35,7 +35,7 @@ public class HighlightRender extends RenderType {
     );
 
     public static void hook(RenderLevelStageEvent event) {
-        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_PARTICLES) {
             HighlightRender.INSTANCE.tick(event.getPoseStack(), Minecraft.getInstance().renderBuffers().bufferSource(), event.getCamera());
         }
     }
@@ -50,12 +50,15 @@ public class HighlightRender extends RenderType {
         if (drawList.isEmpty()) {
             return;
         }
+        RenderSystem.disableDepthTest();
+        RenderSystem.enableBlend();
         for (var block : drawList) {
             if (block.checkDim(world.dimension()) && block.allowRender()) {
                 drawBlockOutline(block.box(), block.color(), stack, camera, multiBuf);
             }
         }
         multiBuf.endBatch();
+        RenderSystem.enableDepthTest();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
     }

@@ -7,6 +7,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.loading.LoadingModList;
+import net.neoforged.fml.loading.moddiscovery.ModInfo;
 
 public class GlodUtil {
 
@@ -41,6 +44,16 @@ public class GlodUtil {
 
     public static double clamp(double num, double floor, double ceil) {
         return Math.min(ceil, Math.max(floor, num));
+    }
+
+    public static boolean checkMod(String modid) {
+        if (ModList.get() == null) {
+            return LoadingModList.get().getMods()
+                    .stream().map(ModInfo::getModId)
+                    .anyMatch(modid::equals);
+        } else {
+            return ModList.get().isLoaded(modid);
+        }
     }
 
 }
