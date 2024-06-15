@@ -1,0 +1,25 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+[[mods]]
+modId="glodium"
+issueTrackerURL="https://github.com/GlodBlock/Glodium/issues"
+displayURL="https://github.com/GlodBlock/Glodium"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="${mod_authors}"
+logoFile="logo.png"
+
+description='''${mod_description}'''
+[[dependencies.glodium]]
+    modId="neoforge"
+    type="REQUIRED"
+    versionRange="${neo_version_range}"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.glodium]]
+    modId="minecraft"
+    type="REQUIRED"
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"
