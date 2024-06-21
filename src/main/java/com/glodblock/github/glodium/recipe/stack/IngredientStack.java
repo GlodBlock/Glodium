@@ -10,32 +10,32 @@ import net.neoforged.neoforge.fluids.FluidStack;
 
 import java.util.function.Predicate;
 
-public abstract class IngredientStack<T> {
+public abstract class IngredientStack<T, S extends Predicate<T>> {
 
-    protected final Predicate<T> ingredient;
+    protected final S ingredient;
     protected int amount;
 
     public static final Codec<Item> ITEM_CODEC = RecordCodecBuilder.create(
             builder -> builder
                     .group(
-                            Ingredient.CODEC.fieldOf("ingredient").forGetter(i -> (Ingredient) i.ingredient),
+                            Ingredient.CODEC.fieldOf("ingredient").forGetter(i -> i.ingredient),
                             ExtraCodecs.POSITIVE_INT.optionalFieldOf("amount", 1).forGetter(i -> i.amount)
                     ).apply(builder, Item::new)
     );
     public static final Codec<Fluid> FLUID_CODEC = RecordCodecBuilder.create(
             builder -> builder
                     .group(
-                            FluidIngredient.CODEC.fieldOf("ingredient").forGetter(i -> (FluidIngredient) i.ingredient),
+                            FluidIngredient.CODEC.fieldOf("ingredient").forGetter(i -> i.ingredient),
                             ExtraCodecs.POSITIVE_INT.optionalFieldOf("amount", 1).forGetter(i -> i.amount)
                     ).apply(builder, Fluid::new)
     );
 
-    public IngredientStack(Predicate<T> ingredient, int amount) {
+    public IngredientStack(S ingredient, int amount) {
         this.ingredient = ingredient;
         this.amount = amount;
     }
 
-    public Predicate<T> getIngredient() {
+    public S getIngredient() {
         return this.ingredient;
     }
 
@@ -93,7 +93,7 @@ public abstract class IngredientStack<T> {
 
     public abstract boolean checkType(Object obj);
 
-    public abstract IngredientStack<T> sample();
+    public abstract IngredientStack<T, S> sample();
 
     public abstract int getStackAmount(T stack);
 
@@ -101,10 +101,10 @@ public abstract class IngredientStack<T> {
 
     @Override
     public String toString() {
-        return this.amount + " " +this.ingredient;
+        return this.amount + "x" +this.ingredient;
     }
 
-    public static final class Item extends IngredientStack<ItemStack> {
+    public static final class Item extends IngredientStack<ItemStack, Ingredient> {
 
         public static final Item EMPTY = new Item(Ingredient.EMPTY, 0);
 
@@ -125,7 +125,7 @@ public abstract class IngredientStack<T> {
 
         @Override
         public Item sample() {
-            return new Item((Ingredient) this.ingredient, this.amount);
+            return new Item(this.ingredient, this.amount);
         }
 
         @Override
@@ -140,7 +140,7 @@ public abstract class IngredientStack<T> {
 
     }
 
-    public static final class Fluid extends IngredientStack<FluidStack> {
+    public static final class Fluid extends IngredientStack<FluidStack, FluidIngredient> {
 
         public static final Fluid EMPTY = new Fluid(new FluidIngredient(new FluidIngredient.FluidValue(FluidStack.EMPTY)), 0);
 
@@ -150,7 +150,7 @@ public abstract class IngredientStack<T> {
 
         @Override
         public void to(RegistryFriendlyByteBuf buff) {
-            ((FluidIngredient) this.ingredient).to(buff);
+            this.ingredient.to(buff);
             buff.writeInt(this.amount);
         }
 
@@ -160,8 +160,8 @@ public abstract class IngredientStack<T> {
         }
 
         @Override
-        public IngredientStack<FluidStack> sample() {
-            return new Fluid((FluidIngredient) this.ingredient, this.amount);
+        public Fluid sample() {
+            return new Fluid(this.ingredient, this.amount);
         }
 
         @Override
