@@ -5,6 +5,7 @@ import com.glodblock.github.glodium.util.GlodUtil;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -29,6 +30,7 @@ public class RegistryHandler {
     protected final List<Pair<String, Block>> blocks = new ArrayList<>();
     protected final List<Pair<String, Item>> items = new ArrayList<>();
     protected final List<Pair<String, BlockEntityType<?>>> tiles = new ArrayList<>();
+    protected final List<Pair<String, DataComponentType<?>>> components = new ArrayList<>();
     protected final List<Class<? extends BlockEntity>> tileClasses = new ArrayList<>();
     protected final List<TileCapabilityMap<?, ?, ?>> tileCaps = new ArrayList<>();
     protected final List<ItemCapabilityMap<?, ?, ?>> itemCaps = new ArrayList<>();
@@ -57,6 +59,10 @@ public class RegistryHandler {
         this.tileClasses.add(GlodUtil.getTileClass(type));
     }
 
+    public void comp(String name, DataComponentType<?> component) {
+        this.components.add(Pair.of(name, component));
+    }
+
     public <T, C, X> void cap(Class<T> capInterface, BlockCapability<C, X> cap, ICapabilityProvider<T, X, C> map) {
         this.tileCaps.add(new TileCapabilityMap<>(capInterface, cap, map));
     }
@@ -75,6 +81,7 @@ public class RegistryHandler {
         onRegisterBlocks();
         onRegisterItems();
         onRegisterTileEntities();
+        onRegisterComponents();
     }
 
     protected void onRegisterCapabilities(RegisterCapabilitiesEvent event) {
@@ -103,6 +110,10 @@ public class RegistryHandler {
 
     protected void onRegisterTileEntities() {
         this.tiles.forEach(e -> Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Glodium.id(this.id, e.getLeft()), e.getRight()));
+    }
+
+    protected void onRegisterComponents() {
+        this.components.forEach(e -> Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE, Glodium.id(this.id, e.getLeft()), e.getRight()));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

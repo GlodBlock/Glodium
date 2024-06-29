@@ -1,6 +1,16 @@
 package com.glodblock.github.glodium.client.render;
 
+import com.mojang.serialization.Codec;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+
 public class ColorData {
+
+    public static final Codec<ColorData> CODEC = Codec.INT.xmap(ColorData::new, ColorData::toARGB);
+    public static final StreamCodec<ByteBuf, ColorData> STREAM_CODEC = StreamCodec.of(
+            (buf, color) -> buf.writeInt(color.toARGB()),
+            buf -> new ColorData(buf.readInt())
+    );
 
     float a;
     float r;

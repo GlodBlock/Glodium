@@ -1,10 +1,14 @@
 package com.glodblock.github.glodium.util;
 
+import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -47,6 +51,10 @@ public class GlodUtil {
             throw new IllegalArgumentException(String.format("%s isn't registered!", type));
         }
         return (Class<T>) REVERSE_CACHE.get(type);
+    }
+
+    public static <T> DataComponentType<T> getComponentType(Codec<T> codec, StreamCodec<? super RegistryFriendlyByteBuf, T> stream) {
+        return DataComponentType.<T>builder().persistent(codec).networkSynchronized(stream).build();
     }
 
     public static boolean checkInvalidRL(String rl, Registry<?> registry) {
