@@ -71,11 +71,6 @@ public class RegistryHandler {
         this.itemCaps.add(new ItemCapabilityMap<>(capInterface, cap, map));
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends Item, C, X> void cap(Class<T> capInterface, ItemCapability<C, X> cap, IItemCapabilityWrapper<T, C> map) {
-        this.itemCaps.add(new ItemCapabilityMap<>(capInterface, cap, (handler, __) -> map.getCapability(handler, (T) handler.getItem())));
-    }
-
     @MustBeInvokedByOverriders
     public void runRegister() {
         onRegisterBlocks();
@@ -142,13 +137,6 @@ public class RegistryHandler {
                 );
             }
         }
-
-    }
-
-    @FunctionalInterface
-    public interface IItemCapabilityWrapper<H extends Item, T> {
-
-        T getCapability(ItemStack stack, H handler);
 
     }
 

@@ -3,10 +3,12 @@ package com.glodblock.github.glodium.recipe.stack;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.crafting.FluidIngredient;
 
 import java.util.function.Predicate;
 
@@ -28,6 +30,14 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
                             FluidIngredient.CODEC.fieldOf("ingredient").forGetter(i -> i.ingredient),
                             ExtraCodecs.POSITIVE_INT.optionalFieldOf("amount", 1).forGetter(i -> i.amount)
                     ).apply(builder, Fluid::new)
+    );
+    public static final StreamCodec<RegistryFriendlyByteBuf, Item> ITEM_STREAM_CODEC = StreamCodec.of(
+            (buf, s) -> s.to(buf),
+            IngredientStack::ofItem
+    );
+    public static final StreamCodec<RegistryFriendlyByteBuf, IngredientStack.Fluid> FLUID_STREAM_CODEC = StreamCodec.of(
+            (buf, s) -> s.to(buf),
+            IngredientStack::ofFluid
     );
 
     public IngredientStack(S ingredient, int amount) {
@@ -52,7 +62,7 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
     }
 
     public static IngredientStack.Fluid of(FluidStack ingredient) {
-        return new Fluid(new FluidIngredient(new FluidIngredient.FluidValue(ingredient)), ingredient.getAmount());
+        return new Fluid(FluidIngredient.of(ingredient), ingredient.getAmount());
     }
 
     public static IngredientStack.Fluid of(FluidIngredient ingredient, int amount) {
@@ -64,7 +74,7 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
     }
 
     public static IngredientStack.Fluid ofFluid(RegistryFriendlyByteBuf buff) {
-        return new Fluid(FluidIngredient.of(buff), buff.readInt());
+        return new Fluid(FluidIngredient.STREAM_CODEC.decode(buff), buff.readInt());
     }
 
     public abstract void to(RegistryFriendlyByteBuf buff);
@@ -114,7 +124,7 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
 
         @Override
         public void to(RegistryFriendlyByteBuf buff) {
-            Ingredient.CONTENTS_STREAM_CODEC.encode(buff, (Ingredient) this.ingredient);
+            Ingredient.CONTENTS_STREAM_CODEC.encode(buff, this.ingredient);
             buff.writeInt(this.amount);
         }
 
@@ -142,7 +152,7 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
 
     public static final class Fluid extends IngredientStack<FluidStack, FluidIngredient> {
 
-        public static final Fluid EMPTY = new Fluid(new FluidIngredient(new FluidIngredient.FluidValue(FluidStack.EMPTY)), 0);
+        public static final Fluid EMPTY = new Fluid(FluidIngredient.empty(), 0);
 
         private Fluid(FluidIngredient ingredient, int amount) {
             super(ingredient, amount);
@@ -150,7 +160,7 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
 
         @Override
         public void to(RegistryFriendlyByteBuf buff) {
-            this.ingredient.to(buff);
+            FluidIngredient.STREAM_CODEC.encode(buff, this.ingredient);
             buff.writeInt(this.amount);
         }
 
