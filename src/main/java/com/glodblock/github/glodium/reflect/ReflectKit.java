@@ -1,5 +1,6 @@
 package com.glodblock.github.glodium.reflect;
 
+import com.glodblock.github.glodium.Glodium;
 import com.glodblock.github.glodium.reflect.moon.Moon;
 
 import java.lang.reflect.Field;
@@ -52,6 +53,7 @@ public class ReflectKit {
         try {
             return (T) Moon.getField(field, owner);
         } catch (Exception e) {
+            Glodium.LOGGER.error("Reflect error.", e);
             throw new IllegalStateException("Failed to read field: " + field);
         }
     }
@@ -60,6 +62,7 @@ public class ReflectKit {
         try {
             Moon.setField(field, owner, value);
         } catch (Exception e) {
+            Glodium.LOGGER.error("Reflect error.", e);
             throw new IllegalStateException("Failed to write field: " + field);
         }
     }
@@ -68,6 +71,7 @@ public class ReflectKit {
         try {
             method.invoke(owner, args);
         } catch (IllegalAccessException | InvocationTargetException e) {
+            Glodium.LOGGER.error("Reflect error.", e);
             throw new IllegalStateException("Failed to execute method: " + method);
         }
     }
@@ -77,6 +81,7 @@ public class ReflectKit {
         try {
             return (T) method.invoke(owner, args);
         } catch (IllegalAccessException | InvocationTargetException e) {
+            Glodium.LOGGER.error("Reflect error.", e);
             throw new IllegalStateException("Failed to execute method: " + method);
         }
     }
