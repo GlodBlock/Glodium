@@ -8,7 +8,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
-@SuppressWarnings("deprecation")
 @ApiStatus.Internal
 public final class Moon {
 
@@ -25,6 +24,7 @@ public final class Moon {
         }
     }
 
+    @SuppressWarnings("removal")
     private static MethodHandles.Lookup lookup() {
         try {
             var field = MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP");
@@ -46,9 +46,8 @@ public final class Moon {
     }
 
     @SuppressWarnings("removal")
-    public static void setField(Field field, Object owner, Object value) throws IllegalAccessException {
+    public static void setField(Field field, Object owner, Object value) {
         if (Modifier.isStatic(field.getModifiers())) {
-            UNSAFE.ensureClassInitialized(field.getDeclaringClass());
             putHelper(field.getType(), UNSAFE.staticFieldBase(field), UNSAFE.staticFieldOffset(field), value);
         } else {
             putHelper(field.getType(), owner, UNSAFE.objectFieldOffset(field), value);
@@ -56,15 +55,15 @@ public final class Moon {
     }
 
     @SuppressWarnings("removal")
-    public static Object getField(Field field, Object owner) throws IllegalAccessException {
+    public static Object getField(Field field, Object owner) {
         if (Modifier.isStatic(field.getModifiers())) {
-            UNSAFE.ensureClassInitialized(field.getDeclaringClass());
             return getHelper(field.getType(), UNSAFE.staticFieldBase(field), UNSAFE.staticFieldOffset(field));
         } else {
             return getHelper(field.getType(), owner, UNSAFE.objectFieldOffset(field));
         }
     }
 
+    @SuppressWarnings("removal")
     private static void putHelper(Class<?> clazz, Object owner, long offset, Object value) {
         if (clazz == Integer.TYPE) {
             UNSAFE.putInt(owner, offset, (int) value);
@@ -87,6 +86,7 @@ public final class Moon {
         }
     }
 
+    @SuppressWarnings("removal")
     private static Object getHelper(Class<?> clazz, Object owner, long offset) {
         if (clazz == Integer.TYPE) {
             return UNSAFE.getInt(owner, offset);
