@@ -3,6 +3,8 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
+    id 'signing'
+    id "io.github.gradle-nexus.publish-plugin" version "2.0.0"
     id 'net.neoforged.moddev' version '1.0.13'
 }
 
@@ -75,15 +77,71 @@ tasks.withType(ProcessResources).configureEach {
     }
 }
 
+javadoc {
+    source = sourceSets.main.allJava
+    classpath = sourceSets.main.compileClasspath + sourceSets.main.output
+
+    options.addStringOption('Xdoclint:none', '-quiet')
+    options.encoding = 'UTF-8'
+    options.charSet = 'UTF-8'
+}
+
+tasks.register('javadocJar', Jar) {
+    dependsOn javadoc
+    archiveClassifier = "javadoc"
+    from javadoc.destinationDir
+}
+
+tasks.register('sourcesJar', Jar) {
+    archiveClassifier = "sources"
+    from sourceSets.main.allJava
+}
+
 publishing {
     publications {
-        register('mavenJava', MavenPublication) {
-            from components.java
+        maven(MavenPublication) {
+            artifact sourcesJar
+            artifact javadocJar
+            artifact jar
+            artifactId = mod_name
+            version = mod_version
+            pom {
+                name = mod_name
+                description = "Codelib for Minecraft."
+                url = "https://github.com/GlodBlock/Glodium"
+                scm {
+                    connection = "scm:git:git://github.com/GlodBlock/Glodium.git"
+                    developerConnection = "scm:git:ssh://github.com:GlodBlock/Glodium.git"
+                    url = "https://github.com/GlodBlock/Glodium/tree/master"
+                }
+                licenses {
+                    license {
+                        name = "MIT"
+                        url = "https://github.com/GlodBlock/Glodium/blob/master/LICENSE.txt"
+                    }
+                }
+                developers {
+                    developer {
+                        name = "GlodBlock"
+                    }
+                }
+            }
         }
     }
+}
+
+signing {
+    required { gradle.taskGraph.hasTask("publishToSonatype") }
+    sign publishing.publications.maven
+}
+
+nexusPublishing {
     repositories {
-        maven {
-            url "file://${project.projectDir}/repo"
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username = project.findProperty("ossrhUsername")
+            password = project.findProperty("ossrhPassword")
         }
     }
 }
