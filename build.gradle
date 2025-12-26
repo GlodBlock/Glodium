@@ -2,9 +2,8 @@ plugins {
     id 'java-library'
     id 'eclipse'
     id 'idea'
-    id 'maven-publish'
+    id 'com.vanniktech.maven.publish' version '0.33.0'
     id 'signing'
-    id "io.github.gradle-nexus.publish-plugin" version "2.0.0"
     id 'net.neoforged.moddev' version '1.0.13'
 }
 
@@ -97,51 +96,27 @@ tasks.register('sourcesJar', Jar) {
     from sourceSets.main.allJava
 }
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            artifact sourcesJar
-            artifact javadocJar
-            artifact jar
-            artifactId = mod_name
-            version = mod_version
-            pom {
-                name = mod_name
-                description = "Codelib for Minecraft."
-                url = "https://github.com/GlodBlock/Glodium"
-                scm {
-                    connection = "scm:git:git://github.com/GlodBlock/Glodium.git"
-                    developerConnection = "scm:git:ssh://github.com:GlodBlock/Glodium.git"
-                    url = "https://github.com/GlodBlock/Glodium/tree/master"
-                }
-                licenses {
-                    license {
-                        name = "MIT"
-                        url = "https://github.com/GlodBlock/Glodium/blob/master/LICENSE.txt"
-                    }
-                }
-                developers {
-                    developer {
-                        name = "GlodBlock"
-                    }
-                }
+mavenPublishing {
+    coordinates("io.github.glodblock", mod_name, mod_version)
+    pom {
+        name = mod_name
+        description = "Codelib for Minecraft."
+        url = "https://github.com/GlodBlock/Glodium"
+        scm {
+            connection = "scm:git:git://github.com/GlodBlock/Glodium.git"
+            developerConnection = "scm:git:ssh://git@github.com/GlodBlock/Glodium.git"
+            url = "https://github.com/GlodBlock/Glodium/tree/master"
+        }
+        licenses {
+            license {
+                name = "MIT"
+                url = "https://github.com/GlodBlock/Glodium/blob/master/LICENSE.txt"
             }
         }
-    }
-}
-
-signing {
-    required { gradle.taskGraph.hasTask("publishToSonatype") }
-    sign publishing.publications.maven
-}
-
-nexusPublishing {
-    repositories {
-        sonatype {
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-            username = project.findProperty("ossrhUsername")
-            password = project.findProperty("ossrhPassword")
+        developers {
+            developer {
+                name = "GlodBlock"
+            }
         }
     }
 }
