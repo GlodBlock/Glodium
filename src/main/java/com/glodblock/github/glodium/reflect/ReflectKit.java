@@ -6,44 +6,33 @@ import com.glodblock.github.glodium.reflect.moon.Moon;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
 
-public class ReflectKit {
+public abstract class ReflectKit {
 
-    public static Method reflectMethod(Class<?> owner, String name, Class<?>... paramTypes) throws NoSuchMethodException {
-        return reflectMethod(owner, new String[]{name}, paramTypes);
+    private ReflectKit() {
+        // NO-OP
     }
 
     @SuppressWarnings("all")
-    public static Method reflectMethod(Class<?> owner, String[] names, Class<?>... paramTypes) throws NoSuchMethodException {
+    public static Method reflectMethod(Class<?> owner, String name, Class<?>... paramTypes) throws NoSuchMethodException {
         Method m = null;
-        for (String name : names) {
-            try {
-                m = owner.getDeclaredMethod(name, paramTypes);
-                if (m != null) break;
-            }
-            catch (NoSuchMethodException ignore) {
-            }
+        try {
+            m = owner.getDeclaredMethod(name, paramTypes);
+        } catch (NoSuchMethodException ignore) {
         }
-        if (m == null) throw new NoSuchMethodException("Can't find field from " + Arrays.toString(names));
+        if (m == null) throw new NoSuchMethodException("Can't find field from " + name);
         m.setAccessible(true);
         return m;
     }
 
     @SuppressWarnings("all")
-    public static Field reflectField(Class<?> owner, String ...names) throws NoSuchFieldException {
+    public static Field reflectField(Class<?> owner, String name) throws NoSuchFieldException {
         Field f = null;
-        for (String name : names) {
-            try {
-                f = owner.getDeclaredField(name);
-                if (f != null) break;
-            }
-            catch (NoSuchFieldException ignore) {
-            }
+        try {
+            f = owner.getDeclaredField(name);
+        } catch (NoSuchFieldException ignore) {
         }
-        if (f == null) throw new NoSuchFieldException("Can't find field from " + Arrays.toString(names));
-        removeFinal(f);
+        if (f == null) throw new NoSuchFieldException("Can't find field from " + name);
         f.setAccessible(true);
         return f;
     }
@@ -83,17 +72,6 @@ public class ReflectKit {
         } catch (IllegalAccessException | InvocationTargetException e) {
             Glodium.LOGGER.error("Reflect error.", e);
             throw new IllegalStateException("Failed to execute method: " + method);
-        }
-    }
-
-    private static void removeFinal(Field field) {
-        var modify = field.getModifiers();
-        // remove primitive type's final modifier is meaningless
-        if (field.getType().isPrimitive() && Modifier.isFinal(modify)) {
-            return;
-        }
-        if (Modifier.isStatic(modify) && Modifier.isFinal(modify)) {
-            Moon.removeFinal(field);
         }
     }
 

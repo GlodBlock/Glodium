@@ -1,28 +1,33 @@
 package com.glodblock.github.glodium.recipe;
 
+import com.mojang.serialization.Codec;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-public abstract class RecipeSearchContext<C extends RecipeInput, T extends Recipe<C>> {
+public abstract class RecipeSearchContext<C extends RecipeInput, T extends Recipe<@NotNull C>> {
 
+    private static final Codec<ResourceKey<@NotNull Recipe<?>>> RECIPE_CODEC = ResourceKey.codec(Registries.RECIPE);
     public boolean stuck;
     public boolean dirty;
     @Nullable
-    public RecipeHolder<T> lastRecipe;
+    public RecipeHolder<@NotNull T> lastRecipe;
     @Nullable
-    public RecipeHolder<T> currentRecipe;
-    private final Supplier<Level> levelGetter;
-    private final RecipeType<T> type;
+    public RecipeHolder<@NotNull T> currentRecipe;
+    private final Supplier<ServerLevel> levelGetter;
+    private final RecipeType<@NotNull T> type;
 
-    public RecipeSearchContext(Supplier<Level> levelGetter, RecipeType<T> type) {
+    public RecipeSearchContext(Supplier<ServerLevel> levelGetter, RecipeType<@NotNull T> type) {
         this.levelGetter = levelGetter;
         this.type = type;
     }
@@ -52,7 +57,7 @@ public abstract class RecipeSearchContext<C extends RecipeInput, T extends Recip
         return !stuck;
     }
 
-    public void onFind(@Nullable RecipeHolder<T> recipe) {
+    public void onFind(@Nullable RecipeHolder<@NotNull T> recipe) {
         if (recipe == null) {
             if (dirty) {
                 dirty = false;
@@ -68,12 +73,12 @@ public abstract class RecipeSearchContext<C extends RecipeInput, T extends Recip
         stuck = false;
     }
 
-    public RecipeHolder<T> searchRecipe() {
+    public RecipeHolder<@NotNull T> searchRecipe() {
         var level = this.levelGetter.get();
         if (level == null) {
             return null;
         }
-        var recipes = level.getRecipeManager().byType(this.type);
+        var recipes = level.recipeAccess().recipeMap().byType(this.type);
         for (var recipe : recipes) {
             if (testRecipe(recipe)) {
                 return recipe;
@@ -103,19 +108,19 @@ public abstract class RecipeSearchContext<C extends RecipeInput, T extends Recip
         if (level == null) {
             return;
         }
-        var nbt = tag.getCompound("recipeCtx");
+        var nbt = tag.getCompoundOrEmpty("recipeCtx");
         if (nbt.contains("current")) {
             try {
-                var id = ResourceLocation.parse(tag.getString("current"));
-                this.currentRecipe = (RecipeHolder<T>) level.getRecipeManager().byKey(id).orElse(null);
+                var id = RECIPE_CODEC.parse(NbtOps.INSTANCE, tag.getCompoundOrEmpty("current")).getOrThrow();
+                this.currentRecipe = (RecipeHolder<@NotNull T>) level.recipeAccess().byKey(id).orElse(null);
             } catch (Throwable e) {
                 this.currentRecipe = null;
             }
         }
         if (nbt.contains("last")) {
             try {
-                var id = ResourceLocation.parse(tag.getString("last"));
-                this.lastRecipe = (RecipeHolder<T>) level.getRecipeManager().byKey(id).orElse(null);
+                var id = RECIPE_CODEC.parse(NbtOps.INSTANCE, tag.getCompoundOrEmpty("last")).getOrThrow();
+                this.lastRecipe = (RecipeHolder<@NotNull T>) level.recipeAccess().byKey(id).orElse(null);
             } catch (Throwable e) {
                 this.lastRecipe = null;
             }

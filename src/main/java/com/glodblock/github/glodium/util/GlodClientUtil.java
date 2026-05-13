@@ -3,7 +3,11 @@ package com.glodblock.github.glodium.util;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 
-public class GlodClientUtil {
+public abstract class GlodClientUtil {
+
+    private GlodClientUtil() {
+        // NO-OP
+    }
 
     public static Vec3 rotor(Vec3 point, Vec3 center, Direction.Axis axis, float a) {
         Vec3 normal = Vec3.ZERO;

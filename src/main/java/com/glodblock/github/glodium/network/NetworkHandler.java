@@ -9,9 +9,11 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -60,7 +62,7 @@ public class NetworkHandler {
         }
     }
 
-    protected StreamCodec<? super RegistryFriendlyByteBuf, ? extends IMessage> codec(Supplier<? extends IMessage> factory) {
+    protected StreamCodec<? super RegistryFriendlyByteBuf, ? extends @NotNull IMessage> codec(Supplier<? extends IMessage> factory) {
         return StreamCodec.of(
                 (pBuffer, pValue) -> pValue.toBytes(pBuffer),
                 pBuffer -> {
@@ -94,7 +96,7 @@ public class NetworkHandler {
     }
 
     public void sendToServer(IMessage message) {
-        PacketDistributor.sendToServer(message);
+        ClientPacketDistributor.sendToServer(message);
     }
 
 }

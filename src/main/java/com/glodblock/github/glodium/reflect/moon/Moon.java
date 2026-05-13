@@ -1,6 +1,5 @@
 package com.glodblock.github.glodium.reflect.moon;
 
-import com.glodblock.github.glodium.Glodium;
 import org.jetbrains.annotations.ApiStatus;
 import sun.misc.Unsafe;
 
@@ -8,11 +7,16 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+@SuppressWarnings("removal")
 @ApiStatus.Internal
-public final class Moon {
+public abstract class Moon {
 
     private static final Unsafe UNSAFE = unsafe();
     private static final MethodHandles.Lookup LOOKUP = lookup();
+
+    private Moon() {
+        // NO-OP
+    }
 
     private static Unsafe unsafe() {
         try {
@@ -24,7 +28,6 @@ public final class Moon {
         }
     }
 
-    @SuppressWarnings("removal")
     private static MethodHandles.Lookup lookup() {
         try {
             var field = MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP");
@@ -35,17 +38,6 @@ public final class Moon {
         }
     }
 
-    public static void removeFinal(Field field) {
-        try {
-            var m = LOOKUP.findVarHandle(Field.class, "modifiers", int.class);
-            var modify = field.getModifiers();
-            m.set(field, modify & ~Modifier.FINAL);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            Glodium.LOGGER.error(e.getMessage());
-        }
-    }
-
-    @SuppressWarnings("removal")
     public static void setField(Field field, Object owner, Object value) {
         if (Modifier.isStatic(field.getModifiers())) {
             putHelper(field.getType(), UNSAFE.staticFieldBase(field), UNSAFE.staticFieldOffset(field), value);
@@ -54,7 +46,6 @@ public final class Moon {
         }
     }
 
-    @SuppressWarnings("removal")
     public static Object getField(Field field, Object owner) {
         if (Modifier.isStatic(field.getModifiers())) {
             return getHelper(field.getType(), UNSAFE.staticFieldBase(field), UNSAFE.staticFieldOffset(field));
@@ -63,7 +54,20 @@ public final class Moon {
         }
     }
 
-    @SuppressWarnings("removal")
+    @SuppressWarnings("unchecked")
+    public static <T> T instantiate(Class<T> type) {
+        try {
+            return type.getDeclaredConstructor().newInstance();
+        } catch (Exception ignored) {
+            // NO-OP
+        }
+        try {
+            return (T) UNSAFE.allocateInstance(type);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     private static void putHelper(Class<?> clazz, Object owner, long offset, Object value) {
         if (clazz == Integer.TYPE) {
             UNSAFE.putInt(owner, offset, (int) value);
@@ -86,7 +90,6 @@ public final class Moon {
         }
     }
 
-    @SuppressWarnings("removal")
     private static Object getHelper(Class<?> clazz, Object owner, long offset) {
         if (clazz == Integer.TYPE) {
             return UNSAFE.getInt(owner, offset);

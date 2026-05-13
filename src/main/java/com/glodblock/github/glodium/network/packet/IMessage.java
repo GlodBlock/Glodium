@@ -2,7 +2,7 @@ package com.glodblock.github.glodium.network.packet;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
@@ -23,10 +23,10 @@ public interface IMessage extends CustomPacketPayload {
 
     boolean isClient();
 
-    ResourceLocation id();
+    Identifier id();
 
     @Override
-    default CustomPacketPayload.@NotNull Type<? extends IMessage> type() {
+    default CustomPacketPayload.@NotNull Type<? extends @NotNull IMessage> type() {
         return new Type<>(id());
     }
 

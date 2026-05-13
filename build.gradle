@@ -4,7 +4,7 @@ plugins {
     id 'idea'
     id 'com.vanniktech.maven.publish' version '0.33.0'
     id 'signing'
-    id 'net.neoforged.moddev' version '1.0.13'
+    id 'net.neoforged.moddev' version '2.0.134'
 }
 
 version = mod_version
@@ -18,7 +18,7 @@ base {
     archivesName = mod_name
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 neoForge {
     version = project.neoforge_version
@@ -43,8 +43,13 @@ neoForge {
             programArguments.addAll("--username", "GlodiumDev", "--quickPlaySingleplayer", "GametestWorld")
         }
 
-        data {
-            data()
+        clientData {
+            clientData()
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+
+        serverData {
+            serverData()
             programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
 

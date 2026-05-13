@@ -6,9 +6,12 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.crafting.FluidIngredient;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
 
@@ -31,11 +34,11 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
                             ExtraCodecs.POSITIVE_INT.optionalFieldOf("amount", 1).forGetter(i -> i.amount)
                     ).apply(builder, Fluid::new)
     );
-    public static final StreamCodec<RegistryFriendlyByteBuf, Item> ITEM_STREAM_CODEC = StreamCodec.of(
+    public static final StreamCodec<@NotNull RegistryFriendlyByteBuf, @NotNull Item> ITEM_STREAM_CODEC = StreamCodec.of(
             (buf, s) -> s.to(buf),
             IngredientStack::ofItem
     );
-    public static final StreamCodec<RegistryFriendlyByteBuf, IngredientStack.Fluid> FLUID_STREAM_CODEC = StreamCodec.of(
+    public static final StreamCodec<@NotNull RegistryFriendlyByteBuf, IngredientStack.@NotNull Fluid> FLUID_STREAM_CODEC = StreamCodec.of(
             (buf, s) -> s.to(buf),
             IngredientStack::ofFluid
     );
@@ -54,7 +57,7 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
     }
 
     public static IngredientStack.Item of(ItemStack ingredient) {
-        return new Item(Ingredient.of(ingredient), ingredient.getCount());
+        return new Item(Ingredient.of(ingredient.getItem()), ingredient.getCount());
     }
 
     public static IngredientStack.Item of(Ingredient ingredient, int amount) {
@@ -116,7 +119,7 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
 
     public static final class Item extends IngredientStack<ItemStack, Ingredient> {
 
-        public static final Item EMPTY = new Item(Ingredient.EMPTY, 0);
+        public static final Item EMPTY = new Item(Ingredient.of(Items.STONE), 0);
 
         private Item(Ingredient ingredient, int amount) {
             super(ingredient, amount);
@@ -152,7 +155,7 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
 
     public static final class Fluid extends IngredientStack<FluidStack, FluidIngredient> {
 
-        public static final Fluid EMPTY = new Fluid(FluidIngredient.empty(), 0);
+        public static final Fluid EMPTY = new Fluid(FluidIngredient.of(Fluids.WATER), 0);
 
         private Fluid(FluidIngredient ingredient, int amount) {
             super(ingredient, amount);

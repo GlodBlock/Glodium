@@ -3,6 +3,7 @@ package com.glodblock.github.glodium.network.packet.sync;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 
 public final class ParaSerializer {
 
@@ -19,19 +20,23 @@ public final class ParaSerializer {
                 case null -> {
                     buf.writeByte(PT.VOID.ordinal());
                 }
-                case Integer i -> {
+                case int i -> {
                     buf.writeByte(PT.INT.ordinal());
                     buf.writeVarInt(i);
                 }
-                case Long l -> {
+                case long l -> {
                     buf.writeByte(PT.LONG.ordinal());
                     buf.writeVarLong(l);
                 }
-                case Short s -> {
+                case short s -> {
                     buf.writeByte(PT.SHORT.ordinal());
                     buf.writeShort(s);
                 }
-                case Boolean b -> {
+                case byte b -> {
+                    buf.writeByte(PT.BYTE.ordinal());
+                    buf.writeByte(b);
+                }
+                case boolean b -> {
                     buf.writeByte(PT.BOOLEAN.ordinal());
                     buf.writeBoolean(b);
                 }
@@ -40,12 +45,20 @@ public final class ParaSerializer {
                     buf.writeUtf(s, 1024);
                 }
                 case ItemStack s -> {
-                    buf.writeByte(PT.STACK.ordinal());
-                    ItemStack.STREAM_CODEC.encode(buf, s);
+                    buf.writeByte(PT.ITEM_STACK.ordinal());
+                    ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, s);
+                }
+                case FluidStack s -> {
+                    buf.writeByte(PT.FLUID_STACK.ordinal());
+                    FluidStack.OPTIONAL_STREAM_CODEC.encode(buf, s);
                 }
                 case CompoundTag t -> {
                     buf.writeByte(PT.NBT.ordinal());
                     buf.writeNbt(t);
+                }
+                case Enum<?> e -> {
+                    buf.writeByte(PT.ENUM.ordinal());
+                    buf.writeInt(e.ordinal());
                 }
                 default -> throw new IllegalArgumentException("Args contains invalid type: " + o.getClass().getName());
             }
@@ -60,10 +73,13 @@ public final class ParaSerializer {
                 case INT -> objs[i] = buf.readVarInt();
                 case LONG -> objs[i] = buf.readVarLong();
                 case SHORT -> objs[i] = buf.readShort();
+                case BYTE -> objs[i] = buf.readByte();
                 case BOOLEAN -> objs[i] = buf.readBoolean();
                 case STRING -> objs[i] = buf.readUtf(1024);
-                case STACK -> objs[i] = ItemStack.STREAM_CODEC.decode(buf);
+                case ITEM_STACK -> objs[i] = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf);
+                case FLUID_STACK -> objs[i] = FluidStack.OPTIONAL_STREAM_CODEC.decode(buf);
                 case NBT -> objs[i] = buf.readNbt();
+                case ENUM -> objs[i] = buf.readInt();
                 default -> throw new IllegalArgumentException("Args contains unknown type.");
             }
         }
@@ -75,10 +91,13 @@ public final class ParaSerializer {
         INT,
         LONG,
         SHORT,
+        BYTE,
         BOOLEAN,
         STRING,
-        STACK,
-        NBT
+        ITEM_STACK,
+        FLUID_STACK,
+        NBT,
+        ENUM
     }
 
 }

@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,13 +16,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public final class GlodCodecs {
+public abstract class GlodCodecs {
 
     private GlodCodecs() {
         // NO-OP
     }
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, CompoundTag> NBT_STREAM_CODEC = StreamCodec.of(
+    public static final StreamCodec<@NotNull RegistryFriendlyByteBuf, @NotNull CompoundTag> NBT_STREAM_CODEC = StreamCodec.of(
             (buf, tag) -> buf.writeNbt(tag),
             buf -> Objects.requireNonNull(buf.readNbt())
     );
@@ -53,7 +54,7 @@ public final class GlodCodecs {
                 });
     }
 
-    public static <T> StreamCodec<RegistryFriendlyByteBuf, List<T>> list(StreamCodec<? super RegistryFriendlyByteBuf, T> codec) {
+    public static <T> StreamCodec<@NotNull RegistryFriendlyByteBuf, @NotNull List<T>> list(StreamCodec<? super RegistryFriendlyByteBuf, @NotNull T> codec) {
         return StreamCodec.of(
                 (buf, l) -> {
                     buf.writeInt(l.size());
@@ -71,7 +72,7 @@ public final class GlodCodecs {
         );
     }
 
-    public static <T> StreamCodec<RegistryFriendlyByteBuf, Optional<T>> optional(StreamCodec<? super RegistryFriendlyByteBuf, T> codec) {
+    public static <T> StreamCodec<@NotNull RegistryFriendlyByteBuf, @NotNull Optional<T>> optional(StreamCodec<? super RegistryFriendlyByteBuf, @NotNull T> codec) {
         return StreamCodec.of(
                 (buf, op) -> {
                     buf.writeBoolean(op.isPresent());
@@ -86,7 +87,7 @@ public final class GlodCodecs {
         );
     }
 
-    public static <A, B> StreamCodec<RegistryFriendlyByteBuf, Pair<A, B>> pair(StreamCodec<? super RegistryFriendlyByteBuf, A> first, StreamCodec<? super RegistryFriendlyByteBuf, B> second) {
+    public static <A, B> StreamCodec<@NotNull RegistryFriendlyByteBuf, @NotNull Pair<A, B>> pair(StreamCodec<? super RegistryFriendlyByteBuf, @NotNull A> first, StreamCodec<? super RegistryFriendlyByteBuf, @NotNull B> second) {
         return StreamCodec.composite(first, Pair::left, second, Pair::right, Pair::of);
     }
 
