@@ -5,13 +5,12 @@ import com.glodblock.github.glodium.network.packet.sync.ParaSerializer;
 import com.glodblock.github.glodium.network.packet.sync.Paras;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public abstract class SGenericPacket implements IMessage {
 
     private String name;
+    private byte[] payload;
     private Object[] paras;
 
     public SGenericPacket() {
@@ -43,19 +42,20 @@ public abstract class SGenericPacket implements IMessage {
     public void fromBytes(RegistryFriendlyByteBuf buf) {
         this.name = buf.readUtf();
         if (buf.readBoolean()) {
-            this.paras = ParaSerializer.from(buf);
+            this.payload = new byte[buf.readableBytes()];
+            buf.readBytes(this.payload);
+            buf.clear();
         } else {
-            this.paras = null;
+            this.payload = new byte[0];
         }
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
     public void onMessage(IPayloadContext ctx) {
         if (Minecraft.getInstance().screen instanceof IActionHolder ah) {
             var fun = ah.getActionMap().get(this.name);
             if (fun != null) {
-                fun.accept(new Paras(this.paras));
+                fun.accept(new Paras(this.payload, ctx.player()));
             }
         }
     }

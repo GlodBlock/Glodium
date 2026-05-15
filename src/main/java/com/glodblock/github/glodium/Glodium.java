@@ -5,6 +5,7 @@ import com.glodblock.github.glodium.xmod.XModManager;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -20,13 +21,13 @@ public class Glodium {
     public static final Logger LOGGER = LogUtils.getLogger();
     public static Glodium INSTANCE;
 
-    public Glodium() {
+    public Glodium(IEventBus bus) {
         XModManager.scan();
         assert INSTANCE == null;
         INSTANCE = this;
         XModManager.init();
-        NeoForge.EVENT_BUS.addListener(this::common);
-        NeoForge.EVENT_BUS.addListener(this::client);
+        bus.addListener(this::common);
+        bus.addListener(this::client);
         if (FMLEnvironment.getDist().isClient()) {
             NeoForge.EVENT_BUS.addListener(HighlightRender::hook);
         }

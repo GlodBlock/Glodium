@@ -1,7 +1,12 @@
 package com.glodblock.github.glodium.client.render.highlight;
 
+import com.glodblock.github.glodium.Glodium;
 import com.glodblock.github.glodium.client.render.ColorData;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -9,35 +14,41 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.rendertype.LayeringTransform;
+import net.minecraft.client.renderer.rendertype.OutputTarget;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
-import java.util.OptionalDouble;
-
-public class HighlightRender extends RenderType {
+public class HighlightRender {
 
     public static final HighlightRender INSTANCE = new HighlightRender();
-    private final LineStateShard LINE_3 = new LineStateShard(OptionalDouble.of(3.0));
-    private final RenderType BLOCK_HIGHLIGHT_LINE = create("glodium_block_highlight_line",
-            DefaultVertexFormat.POSITION_COLOR_NORMAL, VertexFormat.Mode.LINES, 65536, false, false,
-            CompositeState.builder()
-                    .setLineState(LINE_3)
-                    .setTransparencyState(TransparencyStateShard.GLINT_TRANSPARENCY)
-                    .setTextureState(NO_TEXTURE)
-                    .setDepthTestState(NO_DEPTH_TEST)
-                    .setCullState(NO_CULL)
-                    .setLightmapState(NO_LIGHTMAP)
-                    .setWriteMaskState(COLOR_DEPTH_WRITE)
-                    .setShaderState(RENDERTYPE_LINES_SHADER)
-                    .createCompositeState(false)
+    private final RenderPipeline.Snippet BLOCK_HIGHLIGHT_SNIPPET = RenderPipeline.builder(RenderPipelines.MATRICES_FOG_SNIPPET, RenderPipelines.GLOBALS_SNIPPET)
+            .withVertexShader("core/rendertype_lines")
+            .withFragmentShader("core/rendertype_lines")
+            .withColorTargetState(new ColorTargetState(BlendFunction.GLINT))
+            .withDepthStencilState(new DepthStencilState(CompareOp.NOT_EQUAL, true))
+            .withCull(false)
+            .withVertexFormat(DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH, VertexFormat.Mode.LINES)
+            .buildSnippet();
+    private final RenderPipeline BLOCK_HIGHLIGHT_PIPELINE = RenderPipeline.builder(BLOCK_HIGHLIGHT_SNIPPET)
+            .withLocation(Glodium.id(Glodium.MODID, "pipeline/block_highlight"))
+            .build();
+
+    private final RenderType BLOCK_HIGHLIGHT_LINE = RenderType.create(
+            "glodium:block_highlight_line",
+            RenderSetup.builder(BLOCK_HIGHLIGHT_PIPELINE)
+                    .bufferSize(2048)
+                    .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
+                    .setOutputTarget(OutputTarget.ITEM_ENTITY_TARGET)
+                    .createRenderSetup()
     );
 
-    public static void hook(RenderLevelStageEvent event) {
-        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_PARTICLES) {
-            HighlightRender.INSTANCE.tick(event.getPoseStack(), Minecraft.getInstance().renderBuffers().bufferSource(), event.getCamera());
-        }
+    public static void hook(RenderLevelStageEvent.AfterTranslucentParticles event) {
+        HighlightRender.INSTANCE.tick(event.getPoseStack(), Minecraft.getInstance().renderBuffers().bufferSource(), Minecraft.getInstance().gameRenderer.getMainCamera());
     }
 
     public void tick(PoseStack stack, MultiBufferSource.BufferSource multiBuf, Camera camera) {
@@ -50,17 +61,12 @@ public class HighlightRender extends RenderType {
         if (drawList.isEmpty()) {
             return;
         }
-        RenderSystem.disableDepthTest();
-        RenderSystem.enableBlend();
         for (var block : drawList) {
             if (block.checkDim(world.dimension()) && block.allowRender()) {
                 drawBlockOutline(block.box(), block.color(), stack, camera, multiBuf);
             }
         }
         multiBuf.endBatch();
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
     }
 
     private void invalidate() {
@@ -80,7 +86,7 @@ public class HighlightRender extends RenderType {
         var b = color.getBf();
         var a = color.getAf();
         if (camera.isInitialized()) {
-            Vec3 vec3 = camera.getPosition().reverse();
+            Vec3 vec3 = camera.position().reverse();
             AABB aabb = box.move(vec3);
             var topRight = new Vec3(aabb.maxX, aabb.maxY, aabb.maxZ);
             var bottomRight = new Vec3(aabb.maxX, aabb.minY, aabb.maxZ);
@@ -110,12 +116,8 @@ public class HighlightRender extends RenderType {
     private void renderLine(VertexConsumer buf, PoseStack pose, Vec3 from, Vec3 to, float r, float g, float b, float a) {
         var mat = pose.last().pose();
         var normal = from.subtract(to);
-        buf.addVertex(mat, (float) from.x, (float) from.y, (float) from.z).setColor(r, g, b, a).setNormal((float) normal.x, (float) normal.y, (float) normal.z);
-        buf.addVertex(mat, (float) to.x, (float) to.y, (float) to.z).setColor(r, g, b, a).setNormal((float) normal.x, (float) normal.y, (float) normal.z);
-    }
-
-    private HighlightRender() {
-        super("", DefaultVertexFormat.POSITION_COLOR_NORMAL, VertexFormat.Mode.LINES, 0, false, false, () -> {}, () -> {});
+        buf.addVertex(mat, (float) from.x, (float) from.y, (float) from.z).setColor(r, g, b, a).setNormal(pose.last(), (float) normal.x, (float) normal.y, (float) normal.z).setLineWidth(3);
+        buf.addVertex(mat, (float) to.x, (float) to.y, (float) to.z).setColor(r, g, b, a).setNormal(pose.last(), (float) normal.x, (float) normal.y, (float) normal.z).setLineWidth(3);
     }
 
 }

@@ -11,6 +11,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -41,19 +42,19 @@ public class HighlightHandler {
             }
     );
 
-    public static void highlight(BlockPos pos, ResourceKey<Level> dim, long time, ColorData color) {
+    public static void highlight(BlockPos pos, ResourceKey<@NotNull Level> dim, long time, ColorData color) {
         highlight(pos, null, dim, time, new AABB(pos), color);
     }
 
-    public static void highlight(BlockPos pos, ResourceKey<Level> dim, long time, ColorData color, Supplier<Boolean> checker) {
+    public static void highlight(BlockPos pos, ResourceKey<@NotNull Level> dim, long time, ColorData color, Supplier<Boolean> checker) {
         highlight(pos, null, dim, time, new AABB(pos), color, checker);
     }
 
-    public static void highlight(BlockPos pos, Direction face, ResourceKey<Level> dim, long time, AABB box, ColorData color) {
+    public static void highlight(BlockPos pos, Direction face, ResourceKey<@NotNull Level> dim, long time, AABB box, ColorData color) {
         highlight(pos, face, dim, time, box, color, null);
     }
 
-    public static void highlight(BlockPos pos, Direction face, ResourceKey<Level> dim, long time, AABB box, ColorData color, Supplier<Boolean> checker) {
+    public static void highlight(BlockPos pos, Direction face, ResourceKey<@NotNull Level> dim, long time, AABB box, ColorData color, Supplier<Boolean> checker) {
         var r = new HighlightData(pos, face, time, dim, box, color, checker);
         if (!BLOCKS.contains(r)) {
             BLOCK_QUEUE.enqueue(r);
@@ -80,9 +81,9 @@ public class HighlightHandler {
         return BLOCKS;
     }
 
-    public record HighlightData(BlockPos pos, Direction face, long time, ResourceKey<Level> dim, AABB box, ColorData color, Supplier<Boolean> checker) {
+    public record HighlightData(BlockPos pos, Direction face, long time, ResourceKey<@NotNull Level> dim, AABB box, ColorData color, Supplier<Boolean> checker) {
 
-        public boolean checkDim(ResourceKey<Level> dim) {
+        public boolean checkDim(ResourceKey<@NotNull Level> dim) {
             if (dim == null || this.dim == null) {
                 return false;
             }

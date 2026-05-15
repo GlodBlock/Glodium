@@ -9,6 +9,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 public abstract class CGenericPacket implements IMessage {
 
     private String name;
+    private byte[] payload;
     private Object[] paras;
 
     public CGenericPacket() {
@@ -40,9 +41,11 @@ public abstract class CGenericPacket implements IMessage {
     public void fromBytes(RegistryFriendlyByteBuf buf) {
         this.name = buf.readUtf();
         if (buf.readBoolean()) {
-            this.paras = ParaSerializer.from(buf);
+            this.payload = new byte[buf.readableBytes()];
+            buf.readBytes(this.payload);
+            buf.clear();
         } else {
-            this.paras = null;
+            this.payload = new byte[0];
         }
     }
 
@@ -51,7 +54,7 @@ public abstract class CGenericPacket implements IMessage {
         if (ctx.player().containerMenu instanceof IActionHolder ah) {
             var fun = ah.getActionMap().get(this.name);
             if (fun != null) {
-                fun.accept(new Paras(this.paras));
+                fun.accept(new Paras(this.payload, ctx.player()));
             }
         }
     }
