@@ -91,4 +91,22 @@ public abstract class GlodCodecs {
         return StreamCodec.composite(first, Pair::left, second, Pair::right, Pair::of);
     }
 
+    public static <E> StreamCodec<@NotNull RegistryFriendlyByteBuf, @NotNull E> enumerate(Class<E> enumType) {
+        if (!enumType.isEnum()) {
+            throw new IllegalArgumentException(enumType.getName() + " is not an enum");
+        }
+        final var values = enumType.getEnumConstants();
+        return new StreamCodec<>() {
+            @Override
+            public E decode(RegistryFriendlyByteBuf input) {
+                return values[input.readVarInt()];
+            }
+
+            @Override
+            public void encode(RegistryFriendlyByteBuf output, E value) {
+                output.writeVarInt(((Enum<?>) value).ordinal());
+            }
+        };
+    }
+
 }
