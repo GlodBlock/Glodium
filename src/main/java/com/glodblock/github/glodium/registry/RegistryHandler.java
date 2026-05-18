@@ -8,14 +8,17 @@ import com.glodblock.github.glodium.registry.token.TileToken;
 import com.glodblock.github.glodium.xmod.XModManager;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.capabilities.BlockCapability;
 import net.neoforged.neoforge.capabilities.ICapabilityProvider;
@@ -31,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -69,18 +73,22 @@ public class RegistryHandler {
         XModManager.register(modid, this);
     }
 
-    public <T extends Block> DeferredBlock<@NotNull T> block(String name, Supplier<T> builder) {
-        return this.block(name, builder, block -> new BlockItem(block, new Item.Properties()));
+    public <T extends Block> DeferredBlock<@NotNull T> block(String name, Function<BlockBehaviour.Properties, T> builder, BlockBehaviour.Properties properties) {
+        return this.block(name, builder, properties, BlockItem::new, new Item.Properties());
     }
 
-    public <T extends Block> DeferredBlock<@NotNull T> block(String name, Supplier<T> builder, Function<Block, Item> itemWrapper) {
-        var block = this.blocks.register(name, builder);
-        this.items.register(name, () -> itemWrapper.apply(block.get()));
+    public <T extends Block> DeferredBlock<@NotNull T> block(String name, Function<BlockBehaviour.Properties, T> builder, BlockBehaviour.Properties properties, Item.Properties itemProperties) {
+        return this.block(name, builder, properties, BlockItem::new, itemProperties);
+    }
+
+    public <T extends Block> DeferredBlock<@NotNull T> block(String name, Function<BlockBehaviour.Properties, T> builder, BlockBehaviour.Properties properties, BiFunction<Block, Item.Properties, Item> itemWrapper) {
+        return this.block(name, builder, properties, itemWrapper, new Item.Properties());
+    }
+
+    public <T extends Block> DeferredBlock<@NotNull T> block(String name, Function<BlockBehaviour.Properties, T> builder, BlockBehaviour.Properties properties, BiFunction<Block, Item.Properties, Item> itemWrapper, Item.Properties itemProperties) {
+        var block = this.blocks.register(name, key -> builder.apply(properties.setId(ResourceKey.create(Registries.BLOCK, key))));
+        this.item(name, prop -> itemWrapper.apply(block.get(), prop), itemProperties);
         return block;
-    }
-
-    public <T extends Item> DeferredItem<@NotNull T> item(String name, Supplier<T> builder) {
-        return this.items.register(name, builder);
     }
 
     public <T extends Item> DeferredItem<@NotNull T> item(String name, Function<Item.Properties, T> builder) {
@@ -92,7 +100,7 @@ public class RegistryHandler {
     }
 
     public <T extends Item> DeferredItem<@NotNull T> item(String name, Function<Item.Properties, T> builder, Item.Properties properties) {
-        return this.items.register(name, () -> builder.apply(properties));
+        return this.items.register(name, key -> builder.apply(properties.setId(ResourceKey.create(Registries.ITEM, key))));
     }
 
     public <T extends BlockEntity> DeferredTileEntityType<T> tile(String name, Class<T> tileClass, BlockEntityType.BlockEntitySupplier<@NotNull T> factory) {
