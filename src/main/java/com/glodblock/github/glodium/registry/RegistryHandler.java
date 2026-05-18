@@ -1,13 +1,13 @@
 package com.glodblock.github.glodium.registry;
 
+import com.glodblock.github.glodium.registry.defer.DeferredDataComponentRegister;
 import com.glodblock.github.glodium.registry.defer.DeferredDataComponentType;
 import com.glodblock.github.glodium.registry.defer.DeferredTileEntityType;
+import com.glodblock.github.glodium.registry.defer.DeferredTileTypeRegister;
 import com.glodblock.github.glodium.registry.token.TileToken;
 import com.glodblock.github.glodium.xmod.XModManager;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.BlockItem;
@@ -40,8 +40,8 @@ public class RegistryHandler {
     protected final String id;
     protected final DeferredRegister.Items items;
     protected final DeferredRegister.Blocks blocks;
-    protected final DeferredRegister<@NotNull BlockEntityType<?>> tiles;
-    protected final DeferredRegister.DataComponents components;
+    protected final DeferredTileTypeRegister tiles;
+    protected final DeferredDataComponentRegister components;
     protected final List<Pair<TileToken, Block[]>> tileBind = new ArrayList<>();
     protected final List<TileToken> tileTypes = new ArrayList<>();
     protected final List<TileCapabilityMap<?, ?, ?>> tileCaps = new ArrayList<>();
@@ -51,8 +51,8 @@ public class RegistryHandler {
         this.id = modid;
         this.items = DeferredRegister.createItems(modid);
         this.blocks = DeferredRegister.createBlocks(modid);
-        this.tiles = DeferredRegister.create(BuiltInRegistries.BLOCK_ENTITY_TYPE, modid);
-        this.components = DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, modid);
+        this.tiles = new DeferredTileTypeRegister(modid);
+        this.components = new DeferredDataComponentRegister(modid);
         this.blocks.register(modBus);
         this.items.register(modBus);
         this.tiles.register(modBus);
@@ -102,7 +102,7 @@ public class RegistryHandler {
     }
 
     public <T> DeferredDataComponentType<T> comp(String name, UnaryOperator<DataComponentType.Builder<@NotNull T>> builder) {
-        return (DeferredDataComponentType<T>) this.components.registerComponentType(name, builder);
+        return (DeferredDataComponentType<T>) this.components.register(name, () -> builder.apply(DataComponentType.builder()).build());
     }
 
     public <T> DeferredDataComponentType<T> comp(String name, Codec<T> codec) {

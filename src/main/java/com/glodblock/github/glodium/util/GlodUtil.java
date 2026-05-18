@@ -9,6 +9,7 @@ import net.minecraft.resources.Identifier;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.moddiscovery.ModInfo;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class GlodUtil {
 
@@ -16,7 +17,7 @@ public abstract class GlodUtil {
         // NO-OP
     }
 
-    public static <T> DataComponentType<T> getComponentType(Codec<T> codec, StreamCodec<? super RegistryFriendlyByteBuf, T> stream) {
+    public static <T> DataComponentType<@NotNull T> getComponentType(Codec<T> codec, StreamCodec<? super RegistryFriendlyByteBuf, @NotNull T> stream) {
         return DataComponentType.<T>builder().persistent(codec).networkSynchronized(stream).build();
     }
 
