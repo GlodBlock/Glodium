@@ -6,12 +6,24 @@ public record FieldAccessor(Field field) {
 
     static final FieldAccessor FAIL = new FieldAccessor(null);
 
+    public static FieldAccessor of(String clazz, String fieldName) {
+        try {
+            return new FieldAccessor(ReflectKit.reflectField(Class.forName(clazz), fieldName));
+        } catch (Throwable e) {
+            return FieldAccessor.FAIL;
+        }
+    }
+
     public static FieldAccessor of(Class<?> clazz, String fieldName) {
         try {
             return new FieldAccessor(ReflectKit.reflectField(clazz, fieldName));
         } catch (Throwable e) {
             return FieldAccessor.FAIL;
         }
+    }
+
+    public boolean valid() {
+        return this.field != null;
     }
 
     public <T> T get(Object host) {
