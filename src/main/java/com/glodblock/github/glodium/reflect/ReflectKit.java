@@ -3,6 +3,7 @@ package com.glodblock.github.glodium.reflect;
 import com.glodblock.github.glodium.Glodium;
 import com.glodblock.github.glodium.reflect.moon.Moon;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -35,6 +36,12 @@ public abstract class ReflectKit {
         if (f == null) throw new NoSuchFieldException("Can't find field from " + name);
         f.setAccessible(true);
         return f;
+    }
+
+    public static Constructor<?> reflectConstructor(Class<?> owner, Class<?>... paramTypes) throws NoSuchMethodException {
+        var con = owner.getDeclaredConstructor(paramTypes);
+        con.setAccessible(true);
+        return con;
     }
 
     @SuppressWarnings("unchecked")
@@ -72,6 +79,16 @@ public abstract class ReflectKit {
         } catch (IllegalAccessException | InvocationTargetException e) {
             Glodium.LOGGER.error("Reflect error.", e);
             throw new IllegalStateException("Failed to execute method: " + method);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T construct(Constructor<?> constructor, Object... args) {
+        try {
+            return (T) constructor.newInstance(args);
+        } catch (Exception e) {
+            Glodium.LOGGER.error("Reflect error.", e);
+            throw new IllegalStateException("Failed to construct new instance: " + constructor);
         }
     }
 
