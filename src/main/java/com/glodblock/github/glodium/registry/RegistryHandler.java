@@ -24,8 +24,8 @@ import net.neoforged.neoforge.capabilities.BlockCapability;
 import net.neoforged.neoforge.capabilities.ICapabilityProvider;
 import net.neoforged.neoforge.capabilities.ItemCapability;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.event.BlockEntityTypeAddBlocksEvent;
 import net.neoforged.neoforge.registries.DeferredBlock;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.apache.commons.lang3.tuple.Pair;
@@ -36,8 +36,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class RegistryHandler {
 
@@ -46,7 +47,7 @@ public class RegistryHandler {
     protected final DeferredRegister.Blocks blocks;
     protected final DeferredTileTypeRegister tiles;
     protected final DeferredDataComponentRegister components;
-    protected final List<Pair<TileToken, Block[]>> tileBind = new ArrayList<>();
+    protected final List<Pair<TileToken, Set<Block>>> tileBind = new ArrayList<>();
     protected final List<TileToken> tileTypes = new ArrayList<>();
     protected final List<TileCapabilityMap<?, ?, ?>> tileCaps = new ArrayList<>();
     protected final List<ItemCapabilityMap<?, ?, ?>> itemCaps = new ArrayList<>();
@@ -61,7 +62,6 @@ public class RegistryHandler {
         this.items.register(modBus);
         this.tiles.register(modBus);
         this.components.register(modBus);
-        modBus.addListener(BlockEntityTypeAddBlocksEvent.class, this::onBindTileEntity);
         modBus.addListener(RegisterCapabilitiesEvent.class, event -> {
             for (var token : this.tileTypes) {
                 this.tileCaps.forEach(tcm -> tcm.register(event, token));
@@ -103,9 +103,12 @@ public class RegistryHandler {
         return this.items.register(name, key -> builder.apply(properties.setId(ResourceKey.create(Registries.ITEM, key))));
     }
 
-    public <T extends BlockEntity> DeferredTileEntityType<T> tile(String name, Class<T> tileClass, BlockEntityType.BlockEntitySupplier<@NotNull T> factory) {
-        var type = (DeferredTileEntityType<T>) this.tiles.register(name, () -> new BlockEntityType<>(factory, Set.of()));
-        this.tileTypes.add(new TileToken(type, tileClass));
+    public <T extends BlockEntity> DeferredTileEntityType<T> tile(String name, Class<T> tileClass, BlockEntityType.BlockEntitySupplier<@NotNull T> factory, DeferredBlock<?>... blocks) {
+        var blockSet = Stream.of(blocks).map(DeferredHolder::get).map(b -> (Block) b).collect(Collectors.toSet());
+        var type = (DeferredTileEntityType<T>) this.tiles.register(name, () -> new BlockEntityType<>(factory, blockSet));
+        var token = new TileToken(type, tileClass);
+        this.tileTypes.add(token);
+        this.tileBind.add(Pair.of(token, blockSet));
         return type;
     }
 
@@ -121,20 +124,12 @@ public class RegistryHandler {
         return this.comp(name, builder -> builder.persistent(codec).networkSynchronized(netCodec));
     }
 
-    public void bind(Supplier<BlockEntityType<?>> type, Class<? extends BlockEntity> tileClass, Block... blocks) {
-        this.tileBind.add(Pair.of(new TileToken(type, tileClass), blocks));
-    }
-
     public <T, C, X> void cap(Class<T> capInterface, BlockCapability<@NotNull C, X> cap, ICapabilityProvider<@NotNull T, X, @NotNull C> map) {
         this.tileCaps.add(new TileCapabilityMap<>(capInterface, cap, map));
     }
 
     public <T, C, X> void cap(Class<T> capInterface, ItemCapability<@NotNull C, X> cap, ICapabilityProvider<@NotNull ItemStack, X, @NotNull C> map) {
         this.itemCaps.add(new ItemCapabilityMap<>(capInterface, cap, map));
-    }
-
-    protected void onBindTileEntity(BlockEntityTypeAddBlocksEvent event) {
-        this.tileBind.forEach(c -> event.modify(c.getKey().type().get(), c.getValue()));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
