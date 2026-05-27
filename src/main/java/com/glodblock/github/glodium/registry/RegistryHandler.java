@@ -73,6 +73,10 @@ public class RegistryHandler {
         XModManager.register(modid, this);
     }
 
+    public <T extends Block> DeferredBlock<@NotNull T> block(String name, Function<BlockBehaviour.Properties, T> builder) {
+        return this.block(name, builder, BlockBehaviour.Properties.of(), BlockItem::new, new Item.Properties());
+    }
+
     public <T extends Block> DeferredBlock<@NotNull T> block(String name, Function<BlockBehaviour.Properties, T> builder, BlockBehaviour.Properties properties) {
         return this.block(name, builder, properties, BlockItem::new, new Item.Properties());
     }
