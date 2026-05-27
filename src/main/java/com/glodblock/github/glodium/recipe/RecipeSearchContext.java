@@ -2,14 +2,14 @@ package com.glodblock.github.glodium.recipe;
 
 import com.mojang.serialization.Codec;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -87,44 +87,41 @@ public abstract class RecipeSearchContext<C extends RecipeInput, T extends Recip
         return null;
     }
 
-    public abstract boolean testRecipe(RecipeHolder<T> recipe);
+    public abstract boolean testRecipe(RecipeHolder<@NotNull T> recipe);
 
-    public abstract void runRecipe(RecipeHolder<T> recipe);
+    public abstract void runRecipe(RecipeHolder<@NotNull T> recipe);
 
-    public void save(CompoundTag tag) {
-        var nbt = new CompoundTag();
+    public void save(ValueOutput tag) {
+        var nbt = tag.child("recipeCtx");
         if (this.currentRecipe != null) {
-            nbt.putString("current", this.currentRecipe.id().toString());
+            nbt.store("current", RECIPE_CODEC, this.currentRecipe.id());
         }
         if (this.lastRecipe != null) {
-            nbt.putString("last", this.lastRecipe.id().toString());
+            nbt.store("last", RECIPE_CODEC, this.lastRecipe.id());
         }
-        tag.put("recipeCtx", nbt);
     }
 
     @SuppressWarnings("unchecked")
-    public void load(CompoundTag tag) {
+    public void load(ValueInput tag) {
         var level = this.levelGetter.get();
         if (level == null) {
             return;
         }
-        var nbt = tag.getCompoundOrEmpty("recipeCtx");
-        if (nbt.contains("current")) {
+        var nbt = tag.childOrEmpty("recipeCtx");
+        nbt.read("current", RECIPE_CODEC).ifPresent(key -> {
             try {
-                var id = RECIPE_CODEC.parse(NbtOps.INSTANCE, tag.getCompoundOrEmpty("current")).getOrThrow();
-                this.currentRecipe = (RecipeHolder<@NotNull T>) level.recipeAccess().byKey(id).orElse(null);
+                this.currentRecipe = (RecipeHolder<@NotNull T>) level.recipeAccess().byKey(key).orElse(null);
             } catch (Throwable e) {
                 this.currentRecipe = null;
             }
-        }
-        if (nbt.contains("last")) {
+        });
+        nbt.read("last", RECIPE_CODEC).ifPresent(key -> {
             try {
-                var id = RECIPE_CODEC.parse(NbtOps.INSTANCE, tag.getCompoundOrEmpty("last")).getOrThrow();
-                this.lastRecipe = (RecipeHolder<@NotNull T>) level.recipeAccess().byKey(id).orElse(null);
+                this.lastRecipe = (RecipeHolder<@NotNull T>) level.recipeAccess().byKey(key).orElse(null);
             } catch (Throwable e) {
                 this.lastRecipe = null;
             }
-        }
+        });
     }
 
 }
