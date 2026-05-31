@@ -9,6 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.common.crafting.DataComponentIngredient;
 import net.neoforged.neoforge.fluids.FluidStack;
@@ -79,6 +80,10 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
         return new Item(ingredient, amount);
     }
 
+    public static IngredientStack.Item of(ItemLike ingredient, int amount) {
+        return new Item(Ingredient.of(ingredient), amount);
+    }
+
     public static IngredientStack.Fluid of(FluidStack ingredient) {
         return new Fluid(FluidIngredient.of(ingredient), ingredient.getAmount());
     }
@@ -89,6 +94,10 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
 
     public static IngredientStack.Fluid of(FluidIngredient ingredient, int amount) {
         return new Fluid(ingredient, amount);
+    }
+
+    public static IngredientStack.Fluid of(net.minecraft.world.level.material.Fluid ingredient, int amount) {
+        return new Fluid(FluidIngredient.of(ingredient), amount);
     }
 
     public static IngredientStack.Item ofItem(RegistryFriendlyByteBuf buff) {
