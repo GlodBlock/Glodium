@@ -6,10 +6,13 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.material.Fluids;
+import net.neoforged.neoforge.common.crafting.DataComponentIngredient;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStackTemplate;
 import net.neoforged.neoforge.fluids.crafting.FluidIngredient;
 import org.jetbrains.annotations.NotNull;
 
@@ -57,7 +60,19 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
     }
 
     public static IngredientStack.Item of(ItemStack ingredient) {
-        return new Item(Ingredient.of(ingredient.getItem()), ingredient.getCount());
+        if (ingredient.getComponents().isEmpty()) {
+            return new Item(Ingredient.of(ingredient.getItem()), ingredient.getCount());
+        } else {
+            return new Item(DataComponentIngredient.of(false, ingredient.getComponents(), ingredient.getItem()), ingredient.getCount());
+        }
+    }
+
+    public static IngredientStack.Item of(ItemStackTemplate ingredient) {
+        if (ingredient.components().isEmpty()) {
+            return new Item(Ingredient.of(ingredient.item().value()), ingredient.count());
+        } else {
+            return new Item(DataComponentIngredient.of(false, ingredient.components(), ingredient.item()), ingredient.count());
+        }
     }
 
     public static IngredientStack.Item of(Ingredient ingredient, int amount) {
@@ -66,6 +81,10 @@ public abstract class IngredientStack<T, S extends Predicate<T>> {
 
     public static IngredientStack.Fluid of(FluidStack ingredient) {
         return new Fluid(FluidIngredient.of(ingredient), ingredient.getAmount());
+    }
+
+    public static IngredientStack.Fluid of(FluidStackTemplate ingredient) {
+        return new Fluid(FluidIngredient.of(ingredient.fluid().value()), ingredient.amount());
     }
 
     public static IngredientStack.Fluid of(FluidIngredient ingredient, int amount) {
