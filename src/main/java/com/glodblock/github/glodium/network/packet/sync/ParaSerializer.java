@@ -38,7 +38,6 @@ public final class ParaSerializer {
 
     @SuppressWarnings("unchecked")
     public static void to(Object[] obj, RegistryFriendlyByteBuf buf) {
-        buf.writeByte(obj.length);
         for (var o : obj) {
             if (o == null) {
                 buf.writeBoolean(false);

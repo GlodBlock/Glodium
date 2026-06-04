@@ -17,18 +17,18 @@ public class Paras {
 
     @SuppressWarnings("unchecked")
     public <T> T get(Class<T> type) {
+        if (type == String.class) {
+            return (T) this.getString();
+        }
+        if (type == CompoundTag.class) {
+            return (T) this.getNBT();
+        }
         var nil = this.payload.readBoolean();
         if (!nil) {
             return null;
         }
         if (type.isPrimitive()) {
             throw new IllegalArgumentException("Use direct getter for primitive type");
-        }
-        if (type == String.class) {
-            return (T) this.getString();
-        }
-        if (type == CompoundTag.class) {
-            return (T) this.getNBT();
         }
         var decoder = ParaSerializer.getCodec(type);
         if (decoder == null && type.isEnum()) {
@@ -42,35 +42,67 @@ public class Paras {
     }
 
     public int getInt() {
-        return this.payload.readVarInt();
+        if (this.payload.readBoolean()) {
+            return this.payload.readVarInt();
+        } else {
+            return 0;
+        }
     }
 
     public long getLong() {
-        return this.payload.readVarLong();
+        if (this.payload.readBoolean()) {
+            return this.payload.readVarLong();
+        } else {
+            return 0;
+        }
     }
 
     public short getShort() {
-        return this.payload.readShort();
+        if (this.payload.readBoolean()) {
+            return this.payload.readShort();
+        } else {
+            return 0;
+        }
     }
 
     public byte getByte() {
-        return this.payload.readByte();
+        if (this.payload.readBoolean()) {
+            return this.payload.readByte();
+        } else {
+            return 0;
+        }
     }
 
     public boolean getBoolean() {
-        return this.payload.readBoolean();
+        if (this.payload.readBoolean()) {
+            return this.payload.readBoolean();
+        } else {
+            return false;
+        }
     }
 
     public double getDouble() {
-        return this.payload.readDouble();
+        if (this.payload.readBoolean()) {
+            return this.payload.readDouble();
+        } else {
+            return 0;
+        }
     }
 
     public String getString() {
-        return this.payload.readUtf(1024);
+        if (this.payload.readBoolean()) {
+            return this.payload.readUtf(1024);
+        } else {
+            return null;
+        }
     }
 
     public CompoundTag getNBT() {
-        return this.payload.readNbt();
+        if (this.payload.readBoolean()) {
+            return this.payload.readNbt();
+        } else {
+            return null;
+        }
     }
 
 }
