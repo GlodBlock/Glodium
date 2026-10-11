@@ -30,7 +30,7 @@ public class HighlightRender {
             .withVertexShader("core/rendertype_lines")
             .withFragmentShader("core/rendertype_lines")
             .withColorTargetState(new ColorTargetState(BlendFunction.GLINT))
-            .withDepthStencilState(new DepthStencilState(CompareOp.NOT_EQUAL, true))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
             .withCull(false)
             .withVertexFormat(DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH, VertexFormat.Mode.LINES)
             .buildSnippet();
