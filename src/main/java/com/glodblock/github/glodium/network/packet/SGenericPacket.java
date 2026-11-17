@@ -52,7 +52,7 @@ public abstract class SGenericPacket implements IMessage {
 
     @Override
     public void onMessage(IPayloadContext ctx) {
-        if (Minecraft.getInstance().screen instanceof IActionHolder ah) {
+        if (Minecraft.getInstance().gui.screen() instanceof IActionHolder ah) {
             var fun = ah.getActionMap().get(this.name);
             if (fun != null) {
                 fun.accept(new Paras(this.payload, ctx.player()));

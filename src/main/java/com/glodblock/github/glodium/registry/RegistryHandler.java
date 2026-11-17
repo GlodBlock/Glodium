@@ -143,7 +143,7 @@ public class RegistryHandler {
             if (capInterface.isAssignableFrom(token.token())) {
                 event.registerBlockEntity(
                         (BlockCapability) this.cap,
-                        token.type().get(),
+                        (BlockEntityType) token.type().get(),
                         (ICapabilityProvider) this.map
                 );
             }
